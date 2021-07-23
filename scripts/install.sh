@@ -8,6 +8,7 @@ else
     echo "Debian / Ubuntu"
     PACKAGE_MANAGER="apt"
     INSTALL_COMMAND="install"
+fi
 
 SUPPORTED_ARCHS="x86_64 aarch64 armv8l"
 UNAME_ARCH=`uname -m`
