@@ -1,5 +1,14 @@
 #!/bin/bash
 
+if which apk > /dev/null;then
+    echo "Alpine / Postmarket"
+    PACKAGE_MANAGER="apk"
+    INSTALL_COMMAND="add"
+else
+    echo "Debian / Ubuntu"
+    PACKAGE_MANAGER="apt"
+    INSTALL_COMMAND="install"
+
 SUPPORTED_ARCHS="x86_64 aarch64 armv8l"
 UNAME_ARCH=`uname -m`
 
@@ -47,9 +56,13 @@ if ! grep -q "#LD_LIBRARY_PATH" /etc/environment; then
 fi
 
 echo "Installing packages"
-apt update
-apt install -y lxc1 || apt install -y lxc
-apt install -y libgbinder sensorfw-qt5 libsensorfw-qt5-plugins || touch NO_SENSORS
+
+${PACKAGE_MANAGER} update
+if which apk > /dev/null;then
+    apk add pipewire-pulse
+fi
+${PACKAGE_MANAGER} ${INSTALL_COMMAND} -y lxc1 || ${PACKAGE_MANAGER} ${INSTALL_COMMAND} -y lxc
+${PACKAGE_MANAGER} ${INSTALL_COMMAND} -y libgbinder sensorfw-qt5 libsensorfw-qt5-plugins || touch NO_SENSORS
 if [ ! -f NO_SENSORS ]; then
     rm anbox-sensors_0.1.0_${ARCH}.deb
     wget https://github.com/Anbox-halium/anbox-sensors/releases/download/v0.1.0/anbox-sensors_0.1.0_${ARCH}.deb
@@ -151,9 +164,13 @@ echo "Going back to phablet user"
 EOF
 cd /home/phablet
 
-echo "Restarting Pulseaudio service"
-initctl --user stop pulseaudio
-initctl --user start pulseaudio
+echo "Restarting Pulseaudio/Pipewire service"
+if which apk > /dev/null;then
+    rc-service
+else
+    initctl --user stop pulseaudio
+    initctl --user start pulseaudio
+fi
 
 echo "Installing Finished!"
 echo "Run anbox container with \"sudo /home/anbox/run-container.sh\" on terminal"
